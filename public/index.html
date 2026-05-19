@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VEED API Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f6f8;
+        --surface: #ffffff;
+        --surface-alt: #eef2f5;
+        --border: #d7dde3;
+        --border-strong: #a8b3bd;
+        --text: #111820;
+        --muted: #5d6975;
+        --accent: #0b6f6a;
+        --accent-hover: #095d59;
+        --danger: #b3261e;
+        --success: #237a3b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(1180px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 28px 0;
+      }
+
+      header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 18px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 28px;
+        line-height: 1.1;
+        font-weight: 760;
+      }
+
+      .subtitle {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .badge {
+        border: 1px solid var(--border);
+        padding: 7px 10px;
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(360px, 460px) 1fr;
+        min-height: 720px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+      }
+
+      .panel {
+        padding: 24px;
+      }
+
+      .panel + .panel {
+        border-left: 1px solid var(--border);
+      }
+
+      .panel-head {
+        margin-bottom: 20px;
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 760;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin-top: 4px;
+        font-size: 20px;
+        font-weight: 760;
+      }
+
+      form {
+        display: grid;
+        gap: 17px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      label,
+      legend {
+        color: #202933;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      fieldset {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      .drop-zone {
+        display: grid;
+        place-items: center;
+        min-height: 112px;
+        border: 1px dashed var(--border-strong);
+        background: var(--surface-alt);
+        cursor: pointer;
+        transition:
+          border-color 160ms ease,
+          background 160ms ease;
+      }
+
+      .drop-zone:hover,
+      .drop-zone.drag-over {
+        border-color: var(--accent);
+        background: #e6f3f1;
+      }
+
+      .drop-inner {
+        display: grid;
+        gap: 6px;
+        justify-items: center;
+        padding: 16px;
+        text-align: center;
+      }
+
+      .drop-title {
+        font-size: 14px;
+        font-weight: 720;
+      }
+
+      .drop-hint {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      input[type="text"],
+      select {
+        width: 100%;
+        min-height: 40px;
+        border: 1px solid var(--border);
+        background: #ffffff;
+        color: var(--text);
+        font: inherit;
+        font-size: 14px;
+        padding: 9px 10px;
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        border: 1px solid var(--border);
+      }
+
+      .segmented input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .segment {
+        display: grid;
+        place-items: center;
+        min-height: 38px;
+        border-right: 1px solid var(--border);
+        background: #ffffff;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 720;
+      }
+
+      .segment:last-child {
+        border-right: 0;
+      }
+
+      .segmented input:checked + .segment {
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .preview {
+        display: grid;
+        grid-template-columns: 76px 1fr;
+        gap: 10px;
+        align-items: center;
+        min-width: 0;
+      }
+
+      .thumb {
+        width: 76px;
+        height: 76px;
+        object-fit: cover;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+      }
+
+      .file-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      audio {
+        width: 100%;
+      }
+
+      button,
+      .download {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 760;
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+          background 160ms ease,
+          opacity 160ms ease;
+      }
+
+      button:hover:not(:disabled),
+      .download:hover {
+        background: var(--accent-hover);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.56;
+      }
+
+      .status {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        min-height: 38px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .status.visible {
+        display: flex;
+      }
+
+      .spinner {
+        width: 17px;
+        height: 17px;
+        border: 2px solid #b7c2ca;
+        border-top-color: var(--accent);
+        border-radius: 999px;
+        animation: spin 800ms linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .error {
+        min-height: 20px;
+        color: var(--danger);
+        font-size: 13px;
+      }
+
+      .result {
+        display: grid;
+        gap: 16px;
+      }
+
+      .video-shell {
+        display: grid;
+        place-items: center;
+        min-height: 420px;
+        border: 1px solid var(--border);
+        background: #0d1117;
+      }
+
+      video {
+        display: none;
+        width: 100%;
+        max-height: 520px;
+        background: #0d1117;
+      }
+
+      video.visible {
+        display: block;
+      }
+
+      .placeholder {
+        padding: 24px;
+        color: #b9c1ca;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      .meta {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .meta-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 10px;
+      }
+
+      .meta-label {
+        color: var(--muted);
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @media (max-width: 840px) {
+        main {
+          width: min(100% - 20px, 680px);
+          padding: 18px 0;
+        }
+
+        header {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .panel + .panel {
+          border-left: 0;
+          border-top: 1px solid var(--border);
+        }
+
+        .video-shell {
+          min-height: 260px;
+        }
+
+        .meta-row {
+          grid-template-columns: 1fr;
+          gap: 3px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>VEED API Demo</h1>
+          <p class="subtitle">Upload an image and voiceover to generate a subtitled talking head MP4.</p>
+        </div>
+        <div class="badge">POST /generate</div>
+      </header>
+
+      <section class="workspace">
+        <section class="panel">
+          <div class="panel-head">
+            <div class="eyebrow">Input</div>
+            <h2>Talking Head Job</h2>
+          </div>
+
+          <form id="generateForm">
+            <div class="field">
+              <label>Image</label>
+              <div class="drop-zone" id="imageDrop">
+                <input id="imageInput" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" required />
+                <div class="drop-inner">
+                  <div class="drop-title">Choose or drop image</div>
+                  <div class="drop-hint">JPG, PNG, WebP, GIF, AVIF</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="preview hidden" id="imagePreviewWrap">
+              <img class="thumb" id="imagePreview" alt="Selected image preview" />
+              <div class="file-name" id="imageName"></div>
+            </div>
+
+            <div class="field">
+              <label>Audio</label>
+              <div class="drop-zone" id="audioDrop">
+                <input id="audioInput" name="audio" type="file" accept="audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/mp4,audio/aac,audio/m4a" required />
+                <div class="drop-inner">
+                  <div class="drop-title">Choose or drop audio</div>
+                  <div class="drop-hint">MP3, OGG, WAV, M4A, AAC</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="preview hidden" id="audioPreviewWrap">
+              <div></div>
+              <div>
+                <div class="file-name" id="audioName"></div>
+                <audio id="audioPreview" controls></audio>
+              </div>
+            </div>
+
+            <fieldset>
+              <legend>Resolution</legend>
+              <div class="segmented">
+                <label>
+                  <input type="radio" name="resolution" value="720p" checked />
+                  <span class="segment">720p</span>
+                </label>
+                <label>
+                  <input type="radio" name="resolution" value="480p" />
+                  <span class="segment">480p</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label for="preset">Subtitle preset</label>
+              <select id="preset" name="preset">
+                <option value="glass">glass</option>
+                <option value="whisper">whisper</option>
+                <option value="glide">glide</option>
+                <option value="glide2">glide2</option>
+                <option value="fusion">fusion</option>
+                <option value="terminal">terminal</option>
+                <option value="handwritten">handwritten</option>
+                <option value="simple">simple</option>
+                <option value="plain">plain</option>
+                <option value="beans">beans</option>
+                <option value="corpo">corpo</option>
+                <option value="boo">boo</option>
+                <option value="shadeplay">shadeplay</option>
+                <option value="casper">casper</option>
+                <option value="capri">capri</option>
+                <option value="lowkey">lowkey</option>
+                <option value="vinta">vinta</option>
+                <option value="diego">diego</option>
+                <option value="ali">ali</option>
+                <option value="slay">slay</option>
+                <option value="kitty">kitty</option>
+                <option value="hustle">hustle</option>
+                <option value="karl">karl</option>
+                <option value="sprout">sprout</option>
+                <option value="flex">flex</option>
+                <option value="mint">mint</option>
+                <option value="rizz">rizz</option>
+                <option value="vegas">vegas</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="language">Language</label>
+              <input id="language" name="language" type="text" value="en-US" autocomplete="off" />
+            </div>
+
+            <button id="submitBtn" type="submit">Generate subtitled video</button>
+            <div class="status" id="status">
+              <div class="spinner"></div>
+              <span id="statusText">Uploading files...</span>
+            </div>
+            <div class="error" id="error"></div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div class="eyebrow">Output</div>
+            <h2>Final MP4</h2>
+          </div>
+
+          <div class="result">
+            <div class="video-shell">
+              <div class="placeholder" id="placeholder">Your generated video will appear here.</div>
+              <video id="video" controls playsinline></video>
+            </div>
+
+            <div class="meta hidden" id="meta">
+              <div class="meta-row">
+                <div class="meta-label">video_url</div>
+                <div id="videoUrl"></div>
+              </div>
+              <div class="meta-row">
+                <div class="meta-label">fabric_request_id</div>
+                <div id="fabricRequestId"></div>
+              </div>
+              <div class="meta-row">
+                <div class="meta-label">subtitles_request_id</div>
+                <div id="subtitlesRequestId"></div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <a class="download hidden" id="downloadLink" href="#" download>Download MP4</a>
+              <button class="hidden" id="copyUrl" type="button">Copy URL</button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const form = document.querySelector("#generateForm");
+      const submitBtn = document.querySelector("#submitBtn");
+      const statusEl = document.querySelector("#status");
+      const statusText = document.querySelector("#statusText");
+      const errorEl = document.querySelector("#error");
+      const video = document.querySelector("#video");
+      const placeholder = document.querySelector("#placeholder");
+      const meta = document.querySelector("#meta");
+      const videoUrl = document.querySelector("#videoUrl");
+      const fabricRequestId = document.querySelector("#fabricRequestId");
+      const subtitlesRequestId = document.querySelector("#subtitlesRequestId");
+      const downloadLink = document.querySelector("#downloadLink");
+      const copyUrl = document.querySelector("#copyUrl");
+
+      const imageInput = document.querySelector("#imageInput");
+      const audioInput = document.querySelector("#audioInput");
+      const imageDrop = document.querySelector("#imageDrop");
+      const audioDrop = document.querySelector("#audioDrop");
+      const imagePreviewWrap = document.querySelector("#imagePreviewWrap");
+      const audioPreviewWrap = document.querySelector("#audioPreviewWrap");
+      const imagePreview = document.querySelector("#imagePreview");
+      const audioPreview = document.querySelector("#audioPreview");
+      const imageName = document.querySelector("#imageName");
+      const audioName = document.querySelector("#audioName");
+
+      let lastVideoUrl = "";
+
+      const setBusy = (busy) => {
+        submitBtn.disabled = busy;
+        statusEl.classList.toggle("visible", busy);
+      };
+
+      const setError = (message) => {
+        errorEl.textContent = message || "";
+      };
+
+      const updateFilePreview = (input, kind) => {
+        const file = input.files[0];
+        if (!file) return;
+
+        if (kind === "image") {
+          imagePreview.src = URL.createObjectURL(file);
+          imageName.textContent = `${file.name} (${Math.ceil(file.size / 1024)} KB)`;
+          imagePreviewWrap.classList.remove("hidden");
+          return;
+        }
+
+        audioPreview.src = URL.createObjectURL(file);
+        audioName.textContent = `${file.name} (${Math.ceil(file.size / 1024)} KB)`;
+        audioPreviewWrap.classList.remove("hidden");
+      };
+
+      const wireDropZone = (dropEl, inputEl, kind) => {
+        dropEl.addEventListener("click", () => inputEl.click());
+        inputEl.addEventListener("change", () => updateFilePreview(inputEl, kind));
+
+        ["dragenter", "dragover"].forEach((eventName) => {
+          dropEl.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropEl.classList.add("drag-over");
+          });
+        });
+
+        ["dragleave", "drop"].forEach((eventName) => {
+          dropEl.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropEl.classList.remove("drag-over");
+          });
+        });
+
+        dropEl.addEventListener("drop", (event) => {
+          const file = event.dataTransfer.files[0];
+          if (!file) return;
+
+          const transfer = new DataTransfer();
+          transfer.items.add(file);
+          inputEl.files = transfer.files;
+          updateFilePreview(inputEl, kind);
+        });
+      };
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setError("");
+
+        if (!imageInput.files[0] || !audioInput.files[0]) {
+          setError("Choose both an image and an audio file.");
+          return;
+        }
+
+        setBusy(true);
+        statusText.textContent = "Uploading files and generating video...";
+
+        try {
+          const response = await fetch("/generate", {
+            method: "POST",
+            body: new FormData(form),
+          });
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.step ? `${data.step}: ${data.message}` : data.message || "Request failed");
+          }
+
+          lastVideoUrl = data.video_url;
+          video.src = data.video_url;
+          video.classList.add("visible");
+          placeholder.classList.add("hidden");
+          videoUrl.textContent = data.video_url;
+          fabricRequestId.textContent = data.fabric_request_id;
+          subtitlesRequestId.textContent = data.subtitles_request_id;
+          meta.classList.remove("hidden");
+          downloadLink.href = data.video_url;
+          downloadLink.classList.remove("hidden");
+          copyUrl.classList.remove("hidden");
+        } catch (error) {
+          setError(error.message || "Generation failed");
+        } finally {
+          setBusy(false);
+        }
+      });
+
+      copyUrl.addEventListener("click", async () => {
+        if (!lastVideoUrl) return;
+        await navigator.clipboard.writeText(lastVideoUrl);
+        copyUrl.textContent = "Copied";
+        setTimeout(() => {
+          copyUrl.textContent = "Copy URL";
+        }, 1400);
+      });
+
+      wireDropZone(imageDrop, imageInput, "image");
+      wireDropZone(audioDrop, audioInput, "audio");
+    </script>
+  </body>
+</html>
